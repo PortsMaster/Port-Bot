@@ -1,3 +1,10 @@
+import requests
+import json
+from random import choice
+import os
+
+webhook_url = os.environ["NEWS_WEBHOOK_URL"]
+
 screenshot_url_main = (
     "https://raw.githubusercontent.com/PortsMaster/PortMaster-New/main/ports/"
 )
