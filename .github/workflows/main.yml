@@ -25,6 +25,8 @@ jobs:
           
       - name: announce new ports
         run: python announce_ports.py
+        env:
+          NEWS_WEBHOOK_URL: ${{ secrets.NEWS_WEBHOOK_URL }} 
          
       - name: commit files
         run: |
