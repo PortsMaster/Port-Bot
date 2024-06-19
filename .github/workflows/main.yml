@@ -1,4 +1,4 @@
-name: Check ports.json
+name: announce ports
 
 on:
   schedule:
