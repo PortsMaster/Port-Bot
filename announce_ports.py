@@ -1,10 +1,3 @@
-import requests
-import json
-from random import choice
-import os
-
-webhook_url = os.environ["NEWS_WEBHOOK_URL"]
-
 screenshot_url_main = (
     "https://raw.githubusercontent.com/PortsMaster/PortMaster-New/main/ports/"
 )
@@ -33,6 +26,13 @@ def post_message(post_title, port_title, link, image,comment):
 
     response = requests.post(webhook_url, json=data)
 
+newPorts = []
+
+response = requests.get("https://raw.githubusercontent.com/PortsMaster/PortMaster-Info/main/ports.json")
+portJson = response.json()
+for port in portJson["ports"]:
+    newPorts.append(port)
+
 
 oldPorts = []
 
@@ -44,17 +44,12 @@ try:
 except Exception as e:
     pass
 
+if len(oldPorts) < 1:
+    oldPorts = newPorts
 
 with open("ports.json", "w", encoding="utf8") as outfile:
-
-    portsList = []
-    response = requests.get(
-        "https://raw.githubusercontent.com/PortsMaster/PortMaster-Info/main/ports.json"
-    )
-    portJson = response.json()
     for port in portJson["ports"]:
-        portsList.append(port)
-        if port not in oldPorts and len(oldPorts) > 0:
+        if port not in oldPorts:
             title = portJson["ports"][port]["attr"]["title"]
             description = portJson["ports"][port]["attr"]["desc"]
             porter = ",".join(portJson["ports"][port]["attr"]["porter"])
@@ -74,6 +69,7 @@ with open("ports.json", "w", encoding="utf8") as outfile:
             )
             thanks = f"\n\n Thanks to {porter} for bringing this game to PortMaster"
             comment = description + thanks
+            oldPorts.append(port)
             post_message(
                 post_title=f"{choice(emojis)} {title} is now on PortMaster! {choice(emojis)}",
                 port_title=title,
@@ -81,5 +77,6 @@ with open("ports.json", "w", encoding="utf8") as outfile:
                 image=imgurl,
                 comment=comment
             )
+            break
 
-    outfile.write(json.dumps(portsList, indent=2, sort_keys=True))
+    outfile.write(json.dumps(oldPorts, indent=2, sort_keys=True))
