@@ -72,7 +72,7 @@ with open("ports.json", "w", encoding="utf8") as outfile:
             link = "https://portmaster.games/detail.html?name=" + port.replace(
                 ".zip", ""
             )
-            thanks = f"\n\n Thanks to {porter} for bringing this game to PostMaster"
+            thanks = f"\n\n Thanks to {porter} for bringing this game to PortMaster"
             comment = description + thanks
             post_message(
                 post_title=f"{choice(emojis)} {title} is now on PortMaster! {choice(emojis)}",
