@@ -13,7 +13,7 @@ screenshot_url_multiverse = (
 )
 
 
-emojis = ["🎉","🍾","🎊","🎇","🥂"]
+emojis = ["🎉","🍾","🎊","🎇","🥂","🎈","🥳","🎆","🧨","🤯","💥","🔥"]
 
 
 def post_message(post_title, port_title, link, image,comment):
