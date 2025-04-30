@@ -2,88 +2,97 @@ import requests
 import json
 from random import choice
 import os
+from typing import Dict, List
+import logging
 
-webhook_url = os.environ["NEWS_WEBHOOK_URL"]
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-screenshot_url_main = (
-    "https://raw.githubusercontent.com/PortsMaster/PortMaster-New/main/ports/"
-)
-screenshot_url_multiverse = (
-    "https://raw.githubusercontent.com/PortsMaster-MV/PortMaster-MV-New/main/ports/"
-)
+# Constants
+WEBHOOK_URL = os.environ["NEWS_WEBHOOK_URL"]
+SCREENSHOT_URL_MAIN = "https://raw.githubusercontent.com/PortsMaster/PortMaster-New/main/ports/"
+SCREENSHOT_URL_MULTIVERSE = "https://raw.githubusercontent.com/PortsMaster-MV/PortMaster-MV-New/main/ports/"
+PORTS_JSON_URL = "https://raw.githubusercontent.com/PortsMaster/PortMaster-Info/main/ports.json"
+LOCAL_PORTS_FILE = "ports.json"
+EMOJIS = ["🎉", "🍾", "🎊", "🎇", "🥂", "🎈", "🥳", "🎆", "🧨", "🤯", "💥", "🔥"]
 
-
-emojis = ["🎉","🍾","🎊","🎇","🥂","🎈","🥳","🎆","🧨","🤯","💥","🔥"]
-
-
-def post_message(post_title, port_title, link, image,comment):
-    # https://gist.github.com/Birdie0/78ee79402a4301b1faf412ab5f1cdcf9
+def post_message(post_title: str, port_title: str, link: str, image: str, comment: str) -> None:
+    """Post a message to Discord webhook."""
     data = {
         "username": "Announcement Bot",
         "content": post_title,
-        "embeds": [
-            {
-                "title": f"{port_title}",
-                "url": f"{link}",
-                "description": f"{comment}",
-                "image": {"url": f"{image}"},
-            }
-        ],
+        "embeds": [{
+            "title": port_title,
+            "url": link,
+            "description": comment,
+            "image": {"url": image}
+        }]
     }
+    
+    try:
+        response = requests.post(WEBHOOK_URL, json=data)
+        response.raise_for_status()
+        logging.info(f"Successfully posted announcement for {port_title}")
+    except requests.RequestException as e:
+        logging.error(f"Failed to post announcement for {port_title}: {e}")
 
-    response = requests.post(webhook_url, json=data)
+def fetch_ports() -> Dict:
+    """Fetch and return the ports data from the remote JSON file."""
+    try:
+        response = requests.get(PORTS_JSON_URL)
+        response.raise_for_status()
+        return response.json()["ports"]
+    except requests.RequestException as e:
+        logging.error(f"Failed to fetch ports data: {e}")
+        return {}
 
-newPorts = []
+def load_old_ports() -> List[str]:
+    """Load the list of old ports from the local JSON file."""
+    try:
+        with open(LOCAL_PORTS_FILE, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        logging.warning(f"Failed to load {LOCAL_PORTS_FILE}, starting with empty list")
+        return []
 
-response = requests.get("https://raw.githubusercontent.com/PortsMaster/PortMaster-Info/main/ports.json")
-portJson = response.json()
-for port in portJson["ports"]:
-    newPorts.append(port)
+def save_ports(ports: List[str]) -> None:
+    """Save the list of ports to the local JSON file."""
+    try:
+        with open(LOCAL_PORTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(ports, f, indent=2, sort_keys=True)
+        logging.info(f"Successfully saved ports to {LOCAL_PORTS_FILE}")
+    except IOError as e:
+        logging.error(f"Failed to save ports: {e}")
 
+def get_image_url(port: str, port_data: Dict) -> str:
+    """Generate the correct image URL based on the port's source."""
+    base_url = SCREENSHOT_URL_MULTIVERSE if port_data["source"]["repo"] == "multiverse" else SCREENSHOT_URL_MAIN
+    return f"{base_url}{port.replace('.zip', '/')}{port_data['attr']['image']['screenshot']}"
 
-oldPorts = []
+def main():
+    new_ports = fetch_ports()
+    old_ports = load_old_ports()
 
-try:
-    with open("ports.json") as portsjson:
-        parsed_json = json.load(portsjson)
-        for port in parsed_json:
-            oldPorts.append(port)
-except Exception as e:
-    pass
+    for port, port_data in new_ports.items():
+        if port not in old_ports:
+            title = port_data["attr"]["title"]
+            description = port_data["attr"]["desc"]
+            porter = ", ".join(port_data["attr"]["porter"])
+            image_url = get_image_url(port, port_data)
+            link = f"https://portmaster.games/detail.html?name={port.replace('.zip', '')}"
+            comment = f"{description}\n\nThanks to {porter} for bringing this game to PortMaster"
 
-if len(oldPorts) < 1:
-    oldPorts = newPorts
-
-with open("ports.json", "w", encoding="utf8") as outfile:
-    for port in portJson["ports"]:
-        if port not in oldPorts:
-            title = portJson["ports"][port]["attr"]["title"]
-            description = portJson["ports"][port]["attr"]["desc"]
-            porter = ",".join(portJson["ports"][port]["attr"]["porter"])
-            imgurl = (
-                screenshot_url_main
-                + port.replace(".zip", "/")
-                + portJson["ports"][port]["attr"]["image"]["screenshot"]
-            )
-            if portJson["ports"][port]["source"]["repo"] == "multiverse":
-                imgurl = (
-                    screenshot_url_multiverse
-                    + port.replace(".zip", "/")
-                    + portJson["ports"][port]["attr"]["image"]["screenshot"]
-                )
-            link = "https://portmaster.games/detail.html?name=" + port.replace(
-                ".zip", ""
-            )
-            thanks = f"\n\n Thanks to {porter} for bringing this game to PortMaster"
-            comment = description + thanks
-            oldPorts.append(port)
             post_message(
-                post_title=f"{choice(emojis)} {title} is now on PortMaster! {choice(emojis)}",
+                post_title=f"{choice(EMOJIS)} {title} is now on PortMaster! {choice(EMOJIS)}",
                 port_title=title,
                 link=link,
-                image=imgurl,
+                image=image_url,
                 comment=comment
             )
-            break
 
-    outfile.write(json.dumps(oldPorts, indent=2, sort_keys=True))
+            old_ports.append(port)
+            save_ports(old_ports)
+            break  # Remove this if you want to announce all new ports at once
+
+if __name__ == "__main__":
+    main()
