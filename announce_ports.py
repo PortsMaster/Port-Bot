@@ -33,6 +33,15 @@ ANNOUNCEMENT_MESSAGES = [
     "Power up your devices! **{title}** is ready for download on PortMaster.",
 ]
 
+THANKS_MESSAGES = [
+    "Thanks to {porters_md} for bringing this game to PortMaster!",
+    "A big thank you to {porters_md} for their work on this port!",
+    "Shout-out to {porters_md} for making this release possible!",
+    "This port was made possible by the talented {porters_md}!",
+    "Let's give a round of applause to {porters_md} for this one!",
+    "Huge props to {porters_md} for porting this over!",
+]
+
 # --- DISCORD WEBHOOK FUNCTION ---
 def post_announcement(content, embed_data):
     """
@@ -146,10 +155,13 @@ def main():
             message_template = choice(ANNOUNCEMENT_MESSAGES)
             post_content = f"{choice(EMOJIS)} {message_template.format(title=title)} {choice(EMOJIS)}"
 
+            thanks_template = choice(THANKS_MESSAGES)
+            thanks_message = thanks_template.format(porters_md=porters_md)
+
             embed = {
                 "title": title,
                 "url": detail_url,
-                "description": f"{description}\n\nThanks to {porters_md} for bringing this game to PortMaster!",
+                "description": f"{description}\n\n{thanks_message}",
                 "fields": [
                     {"name": "Porters", "value": ", ".join(porters_list), "inline": False},
                     {"name": "Genres", "value": genres, "inline": True},
