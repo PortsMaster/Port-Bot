@@ -16,8 +16,7 @@ SCREENSHOT_URL_MAIN = "https://raw.githubusercontent.com/PortsMaster/PortMaster-
 SCREENSHOT_URL_MULTIVERSE = "https://raw.githubusercontent.com/PortsMaster-MV/PortMaster-MV-New/main/ports/"
 
 EMOJIS = ["🎉", "🍾", "🎊", "🎇", "🥂", "🎈", "🥳", "🎆", "🧨", "🤯", "💥", "🔥", "🎮", "🕹️", "👾", "✨", "🌟", "🤩", "🚀", "🎁"]
-BOT_USERNAME = "PortMaster Announcements"
-BOT_AVATAR_URL = "https://avatars.githubusercontent.com/u/117335735"
+BOT_USERNAME = "Announcement Bot"
 EMBED_COLOR = 3447003  # A nice PortMaster blue
 
 ANNOUNCEMENT_MESSAGES = [
@@ -44,7 +43,6 @@ def post_announcement(content, embed_data):
 
     payload = {
         "username": BOT_USERNAME,
-        "avatar_url": BOT_AVATAR_URL,
         "content": content,
         "embeds": [embed_data],
     }
