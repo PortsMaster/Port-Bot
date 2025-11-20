@@ -23,10 +23,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
+      - name: verify secrets are set
+        run: |
+          if [ -z "$DISCORD_BOT_TOKEN" ]; then echo "DISCORD_BOT_TOKEN is not set"; exit 1; fi
+          if [ -z "$DISCORD_CHANNEL_ID" ]; then echo "DISCORD_CHANNEL_ID is not set"; exit 1; fi
+          echo "Bot token starts with: ${DISCORD_BOT_TOKEN:0:10}..."
+          echo "Channel ID: $DISCORD_CHANNEL_ID"
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+
       - name: announce new ports
         run: python announce_ports.py
         env:
-          NEWS_WEBHOOK_URL: ${{ secrets.NEWS_WEBHOOK_URL }} 
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }} 
          
       - name: commit files
         run: |
